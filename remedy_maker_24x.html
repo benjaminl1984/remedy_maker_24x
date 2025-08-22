@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<title>Remedy Maker and Card Broadcaster</title>
+<meta name='viewport' content='width=device-width, initial-scale=0.11, user-scalable=yes'>
+   <style>
+	 
+        .user-image {
+         display: block;
+            width: 250px;
+            height: 250px;
+            top: 25px;
+            left: 0px;
+            overflow: transparent;
+            background-size: contain;
+            background-position: center center;
+            background-repeat: no-repeat;
+            position: absolute;
+            z-index: 999;
+            opacity: 0.9;
+        }
+
+        .text-container {
+            display: block;
+            width: 250px;
+            height: 250px;
+            position: absolute;
+            z-index: 999;
+        }
+
+        .text-area {
+            width: 100%;
+            height: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            resize: none;
+            opacity: 0.9;
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid #ccc;
+        }
+
+        #master-text-input {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            padding: 12px;
+            z-index: 1000;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            font-size: 14px;
+        }
+
+        #apply-to-all-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 330px;
+            padding: 12px 20px;
+            z-index: 1000;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #apply-to-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Modern Preset Panel Toggle Button */
+        .preset-toggle-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1003;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: white;
+            font-size: 20px;
+        }
+
+        .preset-toggle-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.6);
+        }
+
+        .preset-toggle-btn.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 8px 30px rgba(240, 147, 251, 0.6);
+        }
+
+        /* Modern Preset Panel */
+        .preset-panel {
+            position: fixed;
+            top: 100px;
+            right: -450px;
+            width: 420px;
+            max-height: calc(100vh - 120px);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 25px;
+            z-index: 1002;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .preset-panel.visible {
+            right: 20px;
+        }
+
+        .preset-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            border-radius: 20px 20px 0 0;
+        }
+
+        .preset-panel h3 {
+            margin: 0 0 25px 0;
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .preset-form {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .preset-form input, .preset-form textarea {
+            width: 100%;
+            margin: 8px 0;
+            padding: 12px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .preset-form input:focus, .preset-form textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .preset-form textarea {
+            height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .preset-buttons.four-col {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+        }
+
+        .preset-btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .preset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .clear-btn {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+        }
+
+        .import-btn {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #333;
+        }
+
+        .preset-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .preset-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .preset-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 3px;
+        }
+
+        .preset-list::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px;
+        }
+
+        .preset-item {
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 12px 0;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .preset-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .preset-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .preset-description {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .preset-meta {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+        }
+
+        .preset-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+
+        .action-btn {
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .load-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #333;
+        }
+
+        .export-single-btn {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #333;
+            border-radius: 12px;
+            cursor: pointer;
+            display: block;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-input-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .no-presets {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            padding: 40px 20px;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 16px;
+            margin: 20px 0;
+        }
+
+        /* Positions for all containers */
+        #user-img-2, #text-container-2 {
+            top: 85px;
+            left: 550px;
+            position: absolute;
+        }
+        #user-img-3 {
+            top: 25px;
+            left: 775px;
+        }
+        #user-img-4, #text-container-4 {
+            top: 85px;
+            left: 1330px;
+        }
+        #user-img-5 {
+            top: 335px;
+            left: 0px;
+        }
+        #user-img-6, #text-container-6 {
+            top: 395px;
+            left: 550px;
+        }
+        #user-img-7 {
+            top: 335px;
+            left: 775px;
+        }
+        #user-img-8, #text-container-8 {
+            top: 395px;
+            left: 1330px;
+        }
+        #user-img-9 {
+            top: 645px;
+            left: 0px;
+        }
+        #user-img-10, #text-container-10 {
+            top: 705px;
+            left: 550px;
+        }
+        #user-img-11 {
+            top: 645px;
+            left: 775px;
+        }
+        #user-img-12, #text-container-12 {
+            top: 705px;
+            left: 1330px;
+        }
+        #user-img-13 {
+            top: 955px;
+            left: 0px;
+        }
+        #user-img-14, #text-container-14 {
+            top: 1015px;
+            left: 550px;
+        }
+        #user-img-15 {
+            top: 955px;
+            left: 775px;
+        }
+        #user-img-16, #text-container-16 {
+            top: 1015px;
+            left: 1330px;
+        }
+        #user-img-17 {
+            top: 1270px;
+            left: 0px;
+        }
+        #user-img-18, #text-container-18 {
+            top: 1330px;
+            left: 550px;
+        }
+        #user-img-19 {
+            top: 1270px;
+            left: 775px;
+        }
+        #user-img-20, #text-container-20 {
+            top: 1330px;
+            left: 1330px;
+        }
+        #user-img-21 {
+            top: 1580px;
+            left: 0px;
+        }
+        #user-img-22, #text-container-22 {
+            top: 1640px;
+            left: 550px;
+        }
+        #user-img-23 {
+            top: 1580px;
+            left: 775px;
+        }
+        #user-img-24, #text-container-24 {
+            top: 1640px;
+            left: 1330px;
+        }
+        #user-img-25 {
+            top: 1890px;
+            left: 0px;
+        }
+        #user-img-26, #text-container-26 {
+            top: 1950px;
+            left: 550px;
+        }
+        #user-img-27 {
+            top: 1890px;
+            left: 775px;
+        }
+        #user-img-28, #text-container-28 {
+            top: 1950px;
+            left: 1330px;
+        }
+        #user-img-29 {
+            top: 2200px;
+            left: 0px;
+        }
+        #user-img-30, #text-container-30 {
+            top: 2260px;
+            left: 550px;
+        }
+        #user-img-31 {
+            top: 2200px;
+            left: 775px;
+        }
+        #user-img-32, #text-container-32 {
+            top: 2260px;
+            left: 1330px;
+        }
+        #user-img-33 {
+            top: 2510px;
+            left: 0px;
+        }
+        #user-img-34, #text-container-34 {
+            top: 2570px;
+            left: 550px;
+        }
+        #user-img-35 {
+            top: 2510px;
+            left: 775px;
+        }
+        #user-img-36, #text-container-36 {
+            top: 2570px;
+            left: 1330px;
+        }
+        #user-img-37 {
+            top: 2820px;
+            left: 0px;
+        }
+        #user-img-38, #text-container-38 {
+            top: 2880px;
+            left: 550px;
+        }
+        #user-img-39 {
+            top: 2820px;
+            left: 775px;
+        }
+        #user-img-40, #text-container-40 {
+            top: 2880px;
+            left: 1330px;
+        }
+        #user-img-41 {
+            top: 3130px;
+            left: 0px;
+        }
+        #user-img-42, #text-container-42 {
+            top: 3190px;
+            left: 550px;
+        }
+        #user-img-43 {
+            top: 3130px;
+            left: 775px;
+        }
+        #user-img-44, #text-container-44 {
+            top: 3190px;
+            left: 1330px;
+        }
+        #user-img-45 {
+            top: 3440px;
+            left: 0px;
+        }
+        #user-img-46, #text-container-46 {
+            top: 3500px;
+            left: 550px;
+        }
+        #user-img-47 {
+            top: 3440px;
+            left: 775px;
+        }
+        #user-img-48, #text-container-48 {
+            top: 3500px;
+            left: 1330px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Styles for remove button (red X) */
+        .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: #333;
+            font-weight: bold;
+            border-radius: 50%;
+            border: 2px solid white;
+            cursor: pointer;
+            display: none;
+            text-align: center;
+            line-height: 26px;
+            font-size: 18px;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Only show remove button when there's an image */
+        .user-image.has-image .remove-btn {
+            display: block;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Animation for panel */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1600px) {
+            .preset-panel {
+                width: 380px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .preset-panel {
+                width: 340px;
+                right: -370px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <img src="12x2n.png" width="1554px">
+    <script src="HackTimerWorker.js"></script>
+
+    <!-- Modern Toggle Button for Preset Panel -->
+    <button class="preset-toggle-btn" id="preset-toggle-btn" onclick="togglePresetPanel()">
+        <span id="toggle-icon">⚙</span>
+    </button>
+
+    <!-- Modern Preset Panel -->
+    <div class="preset-panel" id="preset-panel">
+        <h3>Preset Manager</h3>
+        
+        <div class="preset-form">
+            <input type="text" id="preset-name" placeholder="Preset Name" maxlength="50">
+            <textarea id="preset-description" placeholder="Description (optional)" maxlength="200"></textarea>
+            <div class="preset-buttons">
+                <button class="preset-btn save-btn" onclick="savePreset()">💾 Save</button>
+                <button class="preset-btn clear-btn" onclick="clearAllImages()">🗑️ Clear All</button>
+            </div>
+            <div class="preset-buttons four-col" style="margin-top: 12px;">
+                <button class="preset-btn export-btn" onclick="exportAllPresets()">📤 Export All</button>
+                <div class="file-input-wrapper">
+                    <input type="file" id="import-file" accept=".json" onchange="importPresets(event)">
+                    <label for="import-file" class="file-input-label">📥 Import</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="preset-list" id="preset-list">
+            <div class="no-presets">No presets available yet</div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables to store image data and presets
+        let imageFiles = {};
+        let textContents = {};
+        let presets = {}; // Store presets in memory
+        let presetPanelVisible = false;
+
+        // Function to toggle preset panel visibility with smooth animation
+        function togglePresetPanel() {
+            const panel = document.getElementById('preset-panel');
+            const toggleBtn = document.getElementById('preset-toggle-btn');
+            const toggleIcon = document.getElementById('toggle-icon');
+            
+            presetPanelVisible = !presetPanelVisible;
+            
+            if (presetPanelVisible) {
+                panel.classList.add('visible');
+                toggleBtn.classList.add('active');
+                toggleIcon.textContent = '✕';
+            } else {
+                panel.classList.remove('visible');
+                toggleBtn.classList.remove('active');
+                toggleIcon.textContent = '⚙';
+            }
+        }
+
+        // Function to get current state of all images and texts
+        function getCurrentState() {
+            const state = {
+                images: {},
+                texts: {}
+            };
+            
+            // Get all image states
+            const allImageContainers = document.querySelectorAll('.user-image');
+            allImageContainers.forEach(container => {
+                const bgImage = container.style.backgroundImage;
+                if (bgImage && bgImage !== '' && bgImage !== 'none') {
+                    state.images[container.id] = bgImage;
+                }
+            });
+            
+            // Get all text states
+            const allTextAreas = document.querySelectorAll('.text-area');
+            allTextAreas.forEach(textarea => {
+                if (textarea.value.trim() !== '') {
+                    state.texts[textarea.id] = textarea.value;
+                }
+            });
+            
+            return state;
+        }
+
+        // Function to clear all images and texts with modern confirmation
+        function clearAllImages() {
+            if (confirm('🗑️ Do you really want to delete all images and texts?')) {
+                // Clear images
+                const allImageContainers = document.querySelectorAll('.user-image');
+                allImageContainers.forEach(container => {
+                    container.style.backgroundImage = '';
+                    container.classList.remove('has-image');
+                });
+                
+                // Clear file inputs
+                const allInputs = document.querySelectorAll('.input-user-img');
+                allInputs.forEach(input => {
+                    input.value = '';
+                });
+                
+                // Clear text areas
+                const allTextAreas = document.querySelectorAll('.text-area');
+                allTextAreas.forEach(textarea => {
+                    textarea.value = '';
+                });
+                
+                // Clear master text input
+                document.getElementById('master-text-input').value = '';
+                
+                imageFiles = {};
+                textContents = {};
+                
+                // Show success feedback
+                showNotification('✅ All content cleared successfully!', 'success');
+            }
+        }
+
+        // Function to save current state as preset
+        function savePreset() {
+            const name = document.getElementById('preset-name').value.trim();
+            const description = document.getElementById('preset-description').value.trim();
+            
+            if (!name) {
+                showNotification('❌ Please enter a preset name!', 'error');
+                return;
+            }
+            
+            const currentState = getCurrentState();
+            if (Object.keys(currentState.images).length === 0 && Object.keys(currentState.texts).length === 0) {
+                showNotification('❌ No content to save! Please add images or texts first.', 'error');
+                return;
+            }
+            
+            if (presets[name] && !confirm(`Preset "${name}" already exists. Overwrite?`)) {
+                return;
+            }
+            
+            presets[name] = {
+                name: name,
+                description: description || 'No description',
+                imageState: currentState.images,
+                textState: currentState.texts,
+                createdAt: new Date().toLocaleString('en-US')
+            };
+            
+            // Clear form
+            document.getElementById('preset-name').value = '';
+            document.getElementById('preset-description').value = '';
+            
+            updatePresetList();
+            showNotification(`💾 Preset "${name}" saved successfully!`, 'success');
+        }
+
+        // Function to load preset
+        function loadPreset(presetName) {
+            if (!presets[presetName]) {
+                showNotification('❌ Preset not found!', 'error');
+                return;
+            }
+            
+            if (confirm(`📂 Load preset "${presetName}"? All current content will be lost.`)) {
+                // Clear all current content first
+                const allImageContainers = document.querySelectorAll('.user-image');
+                allImageContainers.forEach(container => {
+                    container.style.backgroundImage = '';
+                    container.classList.remove('has-image');
+                });
+                
+                const allTextAreas = document.querySelectorAll('.text-area');
+                allTextAreas.forEach(textarea => {
+                    textarea.value = '';
+                });
+                
+                // Load preset state
+                const preset = presets[presetName];
+                
+                // Load images
+                if (preset.imageState) {
+                    Object.entries(preset.imageState).forEach(([containerId, backgroundImage]) => {
+                        const container = document.getElementById(containerId);
+                        if (container) {
+                            container.style.backgroundImage = backgroundImage;
+                            container.classList.add('has-image');
+                        }
+                    });
+                }
+                
+                // Load texts
+                if (preset.textState) {
+                    Object.entries(preset.textState).forEach(([textAreaId, textValue]) => {
+                        const textarea = document.getElementById(textAreaId);
+                        if (textarea) {
+                            textarea.value = textValue;
+                        }
+                    });
+                }
+                
+                showNotification(`📂 Preset "${presetName}" loaded successfully!`, 'success');
+            }
+        }
+
+        // Function to delete preset
+        function deletePreset(presetName) {
+            if (confirm(`🗑️ Really delete preset "${presetName}"?`)) {
+                delete presets[presetName];
+                updatePresetList();
+                showNotification(`🗑️ Preset "${presetName}" deleted successfully!`, 'success');
+            }
+        }
+
+        // Function to export single preset
+        function exportSinglePreset(presetName) {
+            if (!presets[presetName]) {
+                showNotification('❌ Preset not found!', 'error');
+                return;
+            }
+            
+            const preset = presets[presetName];
+            const dataStr = JSON.stringify(preset, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `${presetName}_preset.json`;
+            link.click();
+            
+            showNotification(`📤 Preset "${presetName}" exported!`, 'success');
+        }
+
+        // Function to export all presets
+        function exportAllPresets() {
+            if (Object.keys(presets).length === 0) {
+                showNotification('❌ No presets to export!', 'error');
+                return;
+            }
+            
+            const exportData = {
+                version: "1.0",
+                exportDate: new Date().toISOString(),
+                presets: presets
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `remedy_presets_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            showNotification(`📤 ${Object.keys(presets).length} presets exported!`, 'success');
+        }
+
+        // Function to import presets
+        function importPresets(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importData = JSON.parse(e.target.result);
+                    
+                    // Check if it's a single preset or multiple presets
+                    if (importData.presets) {
+                        // Multiple presets format
+                        let importCount = 0;
+                        let skipCount = 0;
+                        
+                        Object.entries(importData.presets).forEach(([name, preset]) => {
+                            if (presets[name]) {
+                                if (confirm(`Preset "${name}" already exists. Overwrite?`)) {
+                                    presets[name] = preset;
+                                    importCount++;
+                                } else {
+                                    skipCount++;
+                                }
+                            } else {
+                                presets[name] = preset;
+                                importCount++;
+                            }
+                        });
+                        
+                        showNotification(`📥 ${importCount} presets imported, ${skipCount} skipped!`, 'success');
+                    } else if (importData.name) {
+                        // Single preset format
+                        const name = importData.name;
+                        if (presets[name] && !confirm(`Preset "${name}" already exists. Overwrite?`)) {
+                            return;
+                        }
+                        
+                        presets[name] = importData;
+                        showNotification(`📥 Preset "${name}" imported successfully!`, 'success');
+                    } else {
+                        showNotification('❌ Invalid preset format!', 'error');
+                        return;
+                    }
+                    
+                    updatePresetList();
+                    
+                } catch (error) {
+                    showNotification('❌ Import error: Invalid JSON file!', 'error');
+                    console.error('Import error:', error);
+                }
+            };
+            
+            reader.readAsText(file);
+            event.target.value = ''; // Reset file input
+        }
+
+        // Function to show notifications
+        function showNotification(message, type = 'info') {
+            // Remove existing notification
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${type === 'success' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 
+                           type === 'error' ? 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)' : 
+                           'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'};
+                color: ${type === 'error' ? '#333' : 'white'};
+                padding: 12px 24px;
+                border-radius: 25px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+                z-index: 9999;
+                font-size: 14px;
+                font-weight: 500;
+                backdrop-filter: blur(10px);
+                animation: slideDown 0.3s ease-out;
+            `;
+            
+            // Add slide down animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideDown {
+                    from {
+                        transform: translateX(-50%) translateY(-100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(-50%) translateY(0);
+                        opacity: 1;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            document.body.appendChild(notification);
+            
+            // Remove notification after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideDown 0.3s ease-out reverse';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                    if (style.parentNode) {
+                        style.remove();
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Function to update preset list display
+        function updatePresetList() {
+            const listContainer = document.getElementById('preset-list');
+            
+            if (Object.keys(presets).length === 0) {
+                listContainer.innerHTML = '<div class="no-presets">No presets available yet</div>';
+                return;
+            }
+            
+            let html = '';
+            Object.values(presets).forEach(preset => {
+                const imageCount = preset.imageState ? Object.keys(preset.imageState).length : 0;
+                const textCount = preset.textState ? Object.keys(preset.textState).length : 0;
+                html += `
+                    <div class="preset-item">
+                        <div class="preset-name">${preset.name}</div>
+                        <div class="preset-description">${preset.description || 'No description'}</div>
+                        <div class="preset-meta">
+                            📸 ${imageCount} images • 📝 ${textCount} texts • Created: ${preset.createdAt}
+                        </div>
+                        <div class="preset-actions">
+                            <button class="action-btn load-btn" onclick="loadPreset('${preset.name}')">📂 Load</button>
+                            <button class="action-btn export-single-btn" onclick="exportSinglePreset('${preset.name}')">📤 Export</button>
+                            <button class="action-btn delete-btn" onclick="deletePreset('${preset.name}')">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            listContainer.innerHTML = html;
+        }
+
+        // Function to remove image from a container
+        function removeImage(containerId) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.style.backgroundImage = '';
+                container.classList.remove('has-image');
+                
+                // Also reset the file input if needed
+                const inputId = 'input-' + containerId;
+                const input = document.getElementById(inputId);
+                if (input) {
+                    input.value = '';
+                }
+                
+                showNotification('🗑️ Image removed successfully!', 'success');
+            }
+        }
+
+        window.addEventListener("change", event => {
+            if (event.target.classList.contains('input-user-img')) {
+                const lbl = event.target.closest('label');
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = function (event) {
+                        const imageUrl = event.target.result;
+                        lbl.style.backgroundImage = 'url(' + imageUrl + ')';
+                        lbl.classList.add('has-image'); // Mark as having an image
+                        
+                        // Store image ID and data
+                        const imgId = lbl.id;
+                        imageFiles[imgId] = imageUrl;
+                        
+                        showNotification('📸 Image uploaded successfully!', 'success');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+
+        // Function to apply text to all textareas
+        function applyTextToAll() {
+            const masterText = document.getElementById('master-text-input').value;
+            if (!masterText.trim()) {
+                showNotification('❌ Please enter text first!', 'error');
+                return;
+            }
+            
+            const textareas = document.querySelectorAll('.even-text-area');
+            textareas.forEach(textarea => {
+                textarea.value = masterText;
+            });
+            
+            showNotification(`📝 Text applied to ${textareas.length} fields!`, 'success');
+        }
+
+        // Event Listener for the loading of images in all even containers
+        document.getElementById('input-user-img-2').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onloadend = function(event) {
+                const imageUrl = event.target.result;
+                // user-img-2 anzeigen
+                document.getElementById('user-img-2').style.backgroundImage = `url(${imageUrl})`;
+                document.getElementById('user-img-2').classList.add('has-image');
+
+                // Alle anderen IDs, bei denen das Bild geladen werden soll
+                const imageIDs = [
+                    'user-img-4', 'user-img-6', 'user-img-8', 'user-img-10', 'user-img-12',
+                    'user-img-14', 'user-img-16', 'user-img-18', 'user-img-20', 'user-img-22',
+                    'user-img-24', 'user-img-26', 'user-img-28', 'user-img-30', 'user-img-32',
+                    'user-img-34', 'user-img-36', 'user-img-38', 'user-img-40', 'user-img-42',
+                    'user-img-44', 'user-img-46', 'user-img-48'
+                ];
+
+                // Setze das Bild für jede ID in der Liste
+                imageIDs.forEach(id => {
+                    document.getElementById(id).style.backgroundImage = `url(${imageUrl})`;
+                    document.getElementById(id).classList.add('has-image');
+                });
+                
+                showNotification('📸 Image applied to all even positions!', 'success');
+            }
+
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Close preset panel when clicking outside
+        document.addEventListener('click', function(event) {
+            const panel = document.getElementById('preset-panel');
+            const toggleBtn = document.getElementById('preset-toggle-btn');
+            
+            if (presetPanelVisible && 
+                !panel.contains(event.target) && 
+                !toggleBtn.contains(event.target)) {
+                togglePresetPanel();
+            }
+        });
+
+        // Initialize preset list on page load
+        updatePresetList();
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(event) {
+            // Ctrl/Cmd + P to toggle preset panel
+            if ((event.ctrlKey || event.metaKey) && event.key === 'p') {
+                event.preventDefault();
+                togglePresetPanel();
+            }
+            
+            // Escape to close preset panel
+            if (event.key === 'Escape' && presetPanelVisible) {
+                togglePresetPanel();
+            }
+        });
+    </script>
+
+    <div>
+        <!-- Ungerade Zahlen bleiben Bild-Container -->
+        <label class="user-image" id="user-img-1" for="input-user-img-1">
+            <input type="file" id="input-user-img-1" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-1'); event.stopPropagation();">✕</button>
+        </label>
+
+        <!-- Gerade Zahlen werden zu Text-Containern -->
+        <div class="text-container" id="text-container-2">
+            <textarea class="text-area even-text-area" id="text-area-2" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-3" for="input-user-img-3">
+            <input type="file" id="input-user-img-3" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-3'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-4">
+            <textarea class="text-area even-text-area" id="text-area-4" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-5" for="input-user-img-5">
+            <input type="file" id="input-user-img-5" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-5'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-6">
+            <textarea class="text-area even-text-area" id="text-area-6" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-7" for="input-user-img-7">
+            <input type="file" id="input-user-img-7" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-7'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-8">
+            <textarea class="text-area even-text-area" id="text-area-8" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-9" for="input-user-img-9">
+            <input type="file" id="input-user-img-9" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-9'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-10">
+            <textarea class="text-area even-text-area" id="text-area-10" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-11" for="input-user-img-11">
+            <input type="file" id="input-user-img-11" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-11'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-12">
+            <textarea class="text-area even-text-area" id="text-area-12" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-13" for="input-user-img-13">
+            <input type="file" id="input-user-img-13" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-13'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-14">
+            <textarea class="text-area even-text-area" id="text-area-14" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-15" for="input-user-img-15">
+            <input type="file" id="input-user-img-15" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-15'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-16">
+            <textarea class="text-area even-text-area" id="text-area-16" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-17" for="input-user-img-17">
+            <input type="file" id="input-user-img-17" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-17'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-18">
+            <textarea class="text-area even-text-area" id="text-area-18" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-19" for="input-user-img-19">
+            <input type="file" id="input-user-img-19" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-19'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-20">
+            <textarea class="text-area even-text-area" id="text-area-20" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-21" for="input-user-img-21">
+            <input type="file" id="input-user-img-21" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-21'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-22">
+            <textarea class="text-area even-text-area" id="text-area-22" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-23" for="input-user-img-23">
+            <input type="file" id="input-user-img-23" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-23'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-24">
+            <textarea class="text-area even-text-area" id="text-area-24" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-25" for="input-user-img-25">
+            <input type="file" id="input-user-img-25" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-25'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-26">
+            <textarea class="text-area even-text-area" id="text-area-26" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-27" for="input-user-img-27">
+            <input type="file" id="input-user-img-27" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-27'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-28">
+            <textarea class="text-area even-text-area" id="text-area-28" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-29" for="input-user-img-29">
+            <input type="file" id="input-user-img-29" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-29'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-30">
+            <textarea class="text-area even-text-area" id="text-area-30" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-31" for="input-user-img-31">
+            <input type="file" id="input-user-img-31" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-31'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-32">
+            <textarea class="text-area even-text-area" id="text-area-32" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-33" for="input-user-img-33">
+            <input type="file" id="input-user-img-33" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-33'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-34">
+            <textarea class="text-area even-text-area" id="text-area-34" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-35" for="input-user-img-35">
+            <input type="file" id="input-user-img-35" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-35'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-36">
+            <textarea class="text-area even-text-area" id="text-area-36" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-37" for="input-user-img-37">
+            <input type="file" id="input-user-img-37" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-37'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-38">
+            <textarea class="text-area even-text-area" id="text-area-38" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-39" for="input-user-img-39">
+            <input type="file" id="input-user-img-39" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-39'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-40">
+            <textarea class="text-area even-text-area" id="text-area-40" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-41" for="input-user-img-41">
+            <input type="file" id="input-user-img-41" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-41'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-42">
+            <textarea class="text-area even-text-area" id="text-area-42" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-43" for="input-user-img-43">
+            <input type="file" id="input-user-img-43" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-43'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-44">
+            <textarea class="text-area even-text-area" id="text-area-44" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-45" for="input-user-img-45">
+            <input type="file" id="input-user-img-45" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-45'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-46">
+            <textarea class="text-area even-text-area" id="text-area-46" placeholder="fill in text..."></textarea>
+        </div>
+
+        <label class="user-image" id="user-img-47" for="input-user-img-47">
+            <input type="file" id="input-user-img-47" class="input-user-img">
+            <button class="remove-btn" onclick="removeImage('user-img-47'); event.stopPropagation();">✕</button>
+        </label>
+
+        <div class="text-container" id="text-container-48">
+            <textarea class="text-area even-text-area" id="text-area-48" placeholder="fill in text..."></textarea>
+        </div>
+    </div>
+	
+	 <!-- Master-Textfeld und Button zum Anwenden auf alle Textfelder -->
+    <input type="text" id="master-text-input" placeholder="input name of target...">
+    <button id="apply-to-all-btn" onclick="applyTextToAll()">Apply to all</button>
+</body>
+
+</html>
+                
